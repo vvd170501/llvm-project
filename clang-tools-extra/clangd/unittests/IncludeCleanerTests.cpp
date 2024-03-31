@@ -107,7 +107,7 @@ TEST(IncludeCleaner, GetUnusedHeaders) {
     #include "dir/unused.h"
     #include "unguarded.h"
     #include "unused.h"
-    #include <system_header.h>
+    #include <system_unused.h>
     void foo() {
       a();
       b();
@@ -122,7 +122,7 @@ TEST(IncludeCleaner, GetUnusedHeaders) {
   TU.AdditionalFiles["dir/c.h"] = guard("void c();");
   TU.AdditionalFiles["unused.h"] = guard("void unused();");
   TU.AdditionalFiles["dir/unused.h"] = guard("void dirUnused();");
-  TU.AdditionalFiles["system/system_header.h"] = guard("");
+  TU.AdditionalFiles["system/system_unused.h"] = guard("");
   TU.AdditionalFiles["unguarded.h"] = "";
   TU.ExtraArgs.push_back("-I" + testPath("dir"));
   TU.ExtraArgs.push_back("-isystem" + testPath("system"));
@@ -133,6 +133,25 @@ TEST(IncludeCleaner, GetUnusedHeaders) {
       Findings.UnusedIncludes,
       UnorderedElementsAre(Pointee(writtenInclusion("\"unused.h\"")),
                            Pointee(writtenInclusion("\"dir/unused.h\""))));
+}
+
+TEST(IncludeCleaner, SystemUnusedHeaders) {
+  setIncludeCleanerAnalyzesSystemHeaders(true);
+  auto Cleanup =
+      llvm::make_scope_exit([] { setIncludeCleanerAnalyzesSystemHeaders(false); });
+
+  auto TU = TestTU::withCode(R"cpp(
+    #include <system_header.h>
+    #include <system_unused.h>
+    SystemClass x;
+  )cpp");
+  TU.AdditionalFiles["system/system_header.h"] = guard("class SystemClass {};");
+  TU.AdditionalFiles["system/system_unused.h"] = guard("");
+  TU.ExtraArgs = {"-isystem", testPath("system")};
+  auto AST = TU.build();
+  IncludeCleanerFindings Findings = computeIncludeCleanerFindings(AST);
+  EXPECT_THAT(Findings.UnusedIncludes,
+              ElementsAre(Pointee(writtenInclusion("<system_unused.h>"))));
 }
 
 TEST(IncludeCleaner, ComputeMissingHeaders) {

@@ -275,6 +275,15 @@ opt<bool> ImportInsertions{
     init(CodeCompleteOptions().ImportInsertions),
 };
 
+opt<bool> IncludeCleanerSystemHeaders{
+    "include-cleaner-system-headers",
+    cat(Features),
+    desc("Apply include-cleaner analysis to system headers (<>-style). "
+         "Umbrella headers are not supported at the moment"),
+    init(false),
+    Hidden,
+};
+
 opt<bool> HeaderInsertionDecorators{
     "header-insertion-decorators",
     cat(Features),
@@ -964,6 +973,7 @@ clangd accepts flags on the commandline, and in the CLANGD_FLAGS environment var
   };
   if (ForceOffsetEncoding != OffsetEncoding::UnsupportedEncoding)
     Opts.Encoding = ForceOffsetEncoding;
+  setIncludeCleanerAnalyzesSystemHeaders(IncludeCleanerSystemHeaders);
 
   if (CheckFile.getNumOccurrences()) {
     llvm::SmallString<256> Path;

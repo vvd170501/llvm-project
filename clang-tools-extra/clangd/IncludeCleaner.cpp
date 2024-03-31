@@ -54,6 +54,10 @@
 #include <vector>
 
 namespace clang::clangd {
+
+static bool AnalyzeSystemHeaders = false;
+void setIncludeCleanerAnalyzesSystemHeaders(bool B) { AnalyzeSystemHeaders = B; }
+
 namespace {
 
 bool isIgnored(llvm::StringRef HeaderPath, HeaderFilter IgnoreHeaders) {
@@ -77,15 +81,22 @@ bool mayConsiderUnused(const Inclusion &Inc, ParsedAST &AST,
   if (FE->getDir() == AST.getPreprocessor()
                   .getHeaderSearchInfo()
                   .getModuleMap()
-                  .getBuiltinDir()) 
+                  .getBuiltinDir())
     return false;
   if (PI && PI->shouldKeep(*FE))
     return false;
   // FIXME(kirillbobyrev): We currently do not support the umbrella headers.
   // System headers are likely to be standard library headers.
-  // Until we have good support for umbrella headers, don't warn about them.
-  if (Inc.Written.front() == '<')
-    return tooling::stdlib::Header::named(Inc.Written).has_value();
+  // Until we have good support for umbrella headers, don't warn about them
+  // (unless analysis is explicitly enabled).
+  if (Inc.Written.front() == '<') {
+    if (tooling::stdlib::Header::named(Inc.Written)) {
+      return true;
+    }
+    if (!AnalyzeSystemHeaders) {
+      return false;
+    }
+  }
   if (PI) {
     // Check if main file is the public interface for a private header. If so we
     // shouldn't diagnose it as unused.
