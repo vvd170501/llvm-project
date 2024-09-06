@@ -848,6 +848,10 @@ void clang::EscapeStringForDiagnostic(StringRef Str,
 void Diagnostic::
 FormatDiagnostic(const char *DiagStr, const char *DiagEnd,
                  SmallVectorImpl<char> &OutStr) const {
+  if (OutStr.size() > 100*1024*1024) { // temp fix for #70930
+    return;
+  }
+
   // When the diagnostic string is only "%0", the entire string is being given
   // by an outside source.  Remove unprintable characters from this string
   // and skip all the other string processing.
