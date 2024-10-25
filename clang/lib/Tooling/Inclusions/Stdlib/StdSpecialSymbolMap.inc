@@ -429,8 +429,8 @@ SYMBOL(move_backward, std::, <algorithm>)
 // Remove when the cppreference offline archive catches up.
 SYMBOL(month_weekday, std::chrono::, <chrono>)
 
-// FIXME Ambiguous symbols
-// Not sure if they should be updated, this is copied from v20220730
+// FIXME Ambiguous symbols - incorrectly parsing headers when symbols are
+// written with ns
 SYMBOL(filebuf, std::, <streambuf>)
 SYMBOL(filebuf, std::, <iostream>)
 SYMBOL(filebuf, std::, <iosfwd>)
