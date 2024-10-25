@@ -232,8 +232,8 @@ SYMBOL(ssize, std::, <string_view>)
 SYMBOL(ssize, std::, <unordered_map>)
 SYMBOL(ssize, std::, <unordered_set>)
 SYMBOL(ssize, std::, <vector>)
-// C++ [range.access.general]: ... the customization point objects in [range.access]
-// are available when the header <iterator> is included.
+// C++ [range.access.general]: ... the customization point objects
+// in [range.access] are available when the header <iterator> is included.
 SYMBOL(begin, std::ranges::, <ranges>)
 SYMBOL(begin, std::ranges::, <iterator>)
 SYMBOL(cbegin, std::ranges::, <ranges>)
@@ -287,7 +287,7 @@ SYMBOL(from_stream, std::chrono::, <chrono>)
 SYMBOL(round, std::chrono::, <chrono>)
 SYMBOL(begin, std::filesystem::, <filesystem>)
 SYMBOL(end, std::filesystem::, <filesystem>)
-SYMBOL(get, std::ranges::, <ranges>)-
+SYMBOL(get, std::ranges::, <ranges>)
 
 // Ignore specializations
 SYMBOL(hash, std::, <functional>)
