@@ -232,6 +232,34 @@ SYMBOL(ssize, std::, <string_view>)
 SYMBOL(ssize, std::, <unordered_map>)
 SYMBOL(ssize, std::, <unordered_set>)
 SYMBOL(ssize, std::, <vector>)
+// C++ [range.access.general]: ... the customization point objects in [range.access]
+// are available when the header <iterator> is included.
+SYMBOL(begin, std::ranges::, <ranges>)
+SYMBOL(begin, std::ranges::, <iterator>)
+SYMBOL(cbegin, std::ranges::, <ranges>)
+SYMBOL(cbegin, std::ranges::, <iterator>)
+SYMBOL(cdata, std::ranges::, <ranges>)
+SYMBOL(cdata, std::ranges::, <iterator>)
+SYMBOL(cend, std::ranges::, <ranges>)
+SYMBOL(cend, std::ranges::, <iterator>)
+SYMBOL(crbegin, std::ranges::, <ranges>)
+SYMBOL(crbegin, std::ranges::, <iterator>)
+SYMBOL(crend, std::ranges::, <ranges>)
+SYMBOL(crend, std::ranges::, <iterator>)
+SYMBOL(data, std::ranges::, <ranges>)
+SYMBOL(data, std::ranges::, <iterator>)
+SYMBOL(empty, std::ranges::, <ranges>)
+SYMBOL(empty, std::ranges::, <iterator>)
+SYMBOL(end, std::ranges::, <ranges>)
+SYMBOL(end, std::ranges::, <iterator>)
+SYMBOL(rbegin, std::ranges::, <ranges>)
+SYMBOL(rbegin, std::ranges::, <iterator>)
+SYMBOL(rend, std::ranges::, <ranges>)
+SYMBOL(rend, std::ranges::, <iterator>)
+SYMBOL(size, std::ranges::, <ranges>)
+SYMBOL(size, std::ranges::, <iterator>)
+SYMBOL(ssize, std::ranges::, <ranges>)
+SYMBOL(ssize, std::ranges::, <iterator>)
 
 // Overloads for different containers, actual header depends on function arg.
 // Probably should use a special handler, like with std::move.
@@ -249,6 +277,9 @@ SYMBOL(erase_if, std::, <unordered_map>)
 SYMBOL(erase_if, std::, <set>)
 SYMBOL(erase_if, std::, <deque>)
 SYMBOL(erase_if, std::, <unordered_set>)
+
+// Ignore specializations
+SYMBOL(hash, std::, <functional>)
 
 // Add headers for generic integer-type abs.
 // Ignore other variants (std::complex, std::valarray, std::intmax_t)
@@ -441,13 +472,15 @@ SYMBOL(make_error_condition, std::, /*no headers*/)
 
 // cppreference symbol index page was missing these symbols.
 // Remove them when the cppreference offline archive catches up.
-SYMBOL(add_pointer_t, std::, <type_traits>)
 SYMBOL(regular_invocable, std::, <concepts>)
 
 // Symbols missing from the generated symbol map as reported by users.
 // Remove when the generator starts producing them.
 SYMBOL(div, std::, <cstdlib>)
 SYMBOL(abort, std::, <cstdlib>)
+SYMBOL(atomic_wait, std::, <atomic>)
+SYMBOL(atomic_wait_explicit, std::, <atomic>)
+SYMBOL(move_backward, std::, <algorithm>)
 
 // Class declaration was broken, header wasn't rendered.
 // Remove when the cppreference offline archive catches up.
