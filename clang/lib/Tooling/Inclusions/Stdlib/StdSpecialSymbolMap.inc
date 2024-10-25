@@ -301,10 +301,9 @@ SYMBOL(abs, None, <stdlib.h>)
 SYMBOL(abs, None, <cmath>)
 SYMBOL(abs, None, <math.h>)
 
-// Only add headers for the generic atomic template
+// Only add headers for the generic atomic template.
 // Ignore variants (std::weak_ptr, std::shared_ptr).
 SYMBOL(atomic, std::, <atomic>)
-
 // atomic_* family symbols. <stdatomic.h> is for C compatibility.
 SYMBOL(atomic_bool, std::, <atomic>)
 SYMBOL(atomic_bool, None, <stdatomic.h>)
