@@ -912,6 +912,10 @@ features cannot lower the translation-unit ABI level;
 
 ### clang-format
 
+- Added the `IndentMemberAccessInSimpleAssignments` option to indent member
+  access chains on the value of a simple assignment from the expression's line
+  start.
+
 - Add `SpacesInBlockComments` option to control spacing after `/*` and
   before `*/` in ordinary block comments.
 - Add `AfterRequiresExpression` sub-option of `BraceWrapping` to wrap the

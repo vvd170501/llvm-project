@@ -44,6 +44,13 @@ static bool shouldUnindentNextOperator(const FormatToken &Tok) {
                       Previous->isOneOf(tok::kw_return, TT_RequiresClause));
 }
 
+// A short if statement can put return after the line's first token.
+static bool isInsideReturnStatement(const FormatToken &Tok) {
+  const auto *ReturnOrSemi =
+      Tok.getPreviousOneOf(tok::kw_return, tok::kw_co_return, tok::semi);
+  return ReturnOrSemi && ReturnOrSemi->isNot(tok::semi);
+}
+
 // Returns the length of everything up to the first possible line break after
 // the ), ], } or > matching \c Tok.
 static unsigned getLengthToMatchingParen(const FormatToken &Tok,
@@ -1630,6 +1637,11 @@ ContinuationIndenter::getNewLineColumn(const LineState &State) {
   if (NextNonComment->is(tok::lessless) && CurrentState.FirstLessLess != 0)
     return CurrentState.FirstLessLess;
   if (NextNonComment->isMemberAccess()) {
+    if (Style.IndentMemberAccessInSimpleAssignments &&
+        NextNonComment->NestingLevel == 0 &&
+        CurrentState.SimpleAssignmentMemberAccessIndent) {
+      return *CurrentState.SimpleAssignmentMemberAccessIndent;
+    }
     if (CurrentState.CallContinuation == 0)
       return ContinuationIndent;
     return CurrentState.CallContinuation;
@@ -2003,11 +2015,59 @@ void ContinuationIndenter::moveStatePastFakeLParens(LineState &State,
        (Previous->getPrecedence() == prec::Assignment &&
         Style.AlignOperands != FormatStyle::OAS_DontAlign) ||
        Previous->is(TT_ObjCMethodExpr));
+  std::optional<unsigned> AssignmentMemberAccessIndent;
+  if (Style.IndentMemberAccessInSimpleAssignments && Previous &&
+      Previous->is(tok::equal) && Previous->OperatorIndex == 0 &&
+      !Previous->NextOperator && !isInsideReturnStatement(*Previous) &&
+      Current.NestingLevel == 0 &&
+      llvm::is_contained(Current.FakeLParens, prec::Unknown) &&
+      llvm::none_of(
+          Current.FakeLParens,
+          [](prec::Level Level) { return Level > prec::Assignment; }) &&
+      !(Current.MatchingParen && Current.MatchingParen->is(TT_CastRParen))) {
+    // Parentheses create a separate expression. Only unary operators at the
+    // same level as the assignment affect indentation of its member access.
+    bool HasUnaryOperator = false;
+    for (const FormatToken *Token = &Current; Token;
+         Token = Token->getNextNonComment()) {
+      if (Token->NestingLevel < Current.NestingLevel)
+        break;
+      if (Token->NestingLevel > Current.NestingLevel)
+        continue;
+      if (Token != &Current &&
+          Token->isOneOf(tok::semi, tok::comma, TT_BinaryOperator,
+                         TT_ConditionalExpr)) {
+        break;
+      }
+      if (Token->isOneOf(TT_UnaryOperator, TT_TrailingUnaryOperator,
+                         tok::kw_co_await, tok::kw_co_yield, tok::kw_sizeof,
+                         tok::kw_throw)) {
+        HasUnaryOperator = true;
+        break;
+      }
+    }
+    if (!HasUnaryOperator) {
+      AssignmentMemberAccessIndent =
+          (Newline ? State.Column : State.FirstIndent) +
+          Style.ContinuationIndentWidth;
+    }
+  }
   for (const auto &PrecedenceLevel : llvm::reverse(Current.FakeLParens)) {
     const auto &CurrentState = State.Stack.back();
     ParenState NewParenState = CurrentState;
     NewParenState.Tok = nullptr;
     NewParenState.ContainsLineBreak = false;
+    if (Previous && Previous->is(tok::equal)) {
+      NewParenState.SimpleAssignmentMemberAccessIndent =
+          AssignmentMemberAccessIndent;
+    } else if (Previous &&
+               Previous->isOneOf(TT_BinaryOperator, TT_UnaryOperator,
+                                 TT_CastRParen, TT_ConditionalExpr, tok::comma,
+                                 tok::kw_return)) {
+      NewParenState.SimpleAssignmentMemberAccessIndent.reset();
+    }
+    if (PrecedenceLevel > prec::Assignment || Current.is(TT_UnaryOperator))
+      NewParenState.SimpleAssignmentMemberAccessIndent.reset();
     NewParenState.LastOperatorWrapped = true;
     NewParenState.IsChainedConditional = false;
     NewParenState.IsWrappedConditional = false;

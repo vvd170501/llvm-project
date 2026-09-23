@@ -296,6 +296,9 @@ struct ParenState {
   /// contains the start column of the second line. Otherwise 0.
   unsigned CallContinuation = 0;
 
+  /// Indentation for member access in a simple assignment's value.
+  std::optional<unsigned> SimpleAssignmentMemberAccessIndent;
+
   /// The column of the first variable name in a variable declaration.
   ///
   /// Used to align further variables if necessary.
@@ -428,6 +431,11 @@ struct ParenState {
       return StartOfArraySubscripts < Other.StartOfArraySubscripts;
     if (CallContinuation != Other.CallContinuation)
       return CallContinuation < Other.CallContinuation;
+    if (SimpleAssignmentMemberAccessIndent !=
+        Other.SimpleAssignmentMemberAccessIndent) {
+      return SimpleAssignmentMemberAccessIndent <
+             Other.SimpleAssignmentMemberAccessIndent;
+    }
     if (VariablePos != Other.VariablePos)
       return VariablePos < Other.VariablePos;
     if (ContainsLineBreak != Other.ContainsLineBreak)

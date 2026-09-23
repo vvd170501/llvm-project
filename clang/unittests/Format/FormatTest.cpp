@@ -9550,6 +9550,147 @@ TEST_F(FormatTest, FormatsBuilderPattern) {
                getLLVMStyleWithColumns(30));
 }
 
+TEST_F(FormatTest, IndentsMemberAccessInSimpleAssignments) {
+  FormatStyle Style = getLLVMStyle();
+  Style.ColumnLimit = 0;
+  Style.IndentWidth = 4;
+  Style.ContinuationIndentWidth = 4;
+  Style.IndentMemberAccessInSimpleAssignments = true;
+
+  verifyFormat("static const auto config = Builder()\n"
+               "    .Add(\"foo\")\n"
+               "    .Finalize();",
+               "static const auto config = Builder()\n"
+               "                                     .Add(\"foo\")\n"
+               "                                     .Finalize();",
+               Style);
+  verifyFormat("static const auto config =\n"
+               "    Builder()\n"
+               "        .Add(\"foo\")\n"
+               "        .Finalize();",
+               "static const auto config =\n"
+               "    Builder()\n"
+               "    .Add(\"foo\")\n"
+               "    .Finalize();",
+               Style);
+  verifyFormat("void f() {\n"
+               "    auto config = Builder()\n"
+               "        ->Add();\n"
+               "}",
+               "void f() {\n"
+               "    auto config = Builder()\n"
+               "                            ->Add();\n"
+               "}",
+               Style);
+
+  // The option also applies when the builder contains a nested unary
+  // expression or is wrapped in parentheses.
+  verifyFormat("auto x = Builder()\n"
+               "    .Add(i++);\n"
+               "auto y = (Builder()++)\n"
+               "    .Add();",
+               "auto x = Builder()\n"
+               "                 .Add(i++);\n"
+               "auto y = (Builder()++)\n"
+               "                     .Add();",
+               Style);
+
+  // A return expression without an assignment starts from the return line.
+  verifyFormat("auto f() {\n"
+               "    return Builder()\n"
+               "        .Add();\n"
+               "}",
+               "auto f() {\n"
+               "    return Builder()\n"
+               "               .Add();\n"
+               "}",
+               Style);
+  verifyFormat("auto f() {\n"
+               "    return target = Builder()\n"
+               "                        .Add();\n"
+               "}",
+               "auto f() {\n"
+               "    return target = Builder()\n"
+               "        .Add();\n"
+               "}",
+               Style);
+  verifyFormat("task f() {\n"
+               "    co_return Builder()\n"
+               "        .Add();\n"
+               "}",
+               "task f() {\n"
+               "    co_return Builder()\n"
+               "                     .Add();\n"
+               "}",
+               Style);
+  verifyFormat("task f() {\n"
+               "    co_return target = Builder()\n"
+               "                           .Add();\n"
+               "}",
+               "task f() {\n"
+               "    co_return target = Builder()\n"
+               "        .Add();\n"
+               "}",
+               Style);
+
+  FormatStyle ShortIfStyle = Style;
+  ShortIfStyle.AllowShortIfStatementsOnASingleLine =
+      FormatStyle::SIS_AllIfsAndElse;
+  verifyFormat("auto f() {\n"
+               "    if (cond) return target = Builder()\n"
+               "                                  .Add();\n"
+               "}",
+               "auto f() {\n"
+               "    if (cond) return target = Builder()\n"
+               "        .Add();\n"
+               "}",
+               ShortIfStyle);
+
+  FormatStyle Baseline = Style;
+  Baseline.IndentMemberAccessInSimpleAssignments = false;
+
+  // Member access in another expression keeps its usual indentation.
+  for (const char *Code : {
+           "auto x = other | Builder()\n"
+           "    .Add();",
+           "auto x = Builder()\n"
+           "    .Add() | other;",
+           "auto x = Builder()\n"
+           "    .Add() ? left : right;",
+           "auto x = Builder()\n"
+           "    .Add() = other;",
+           "auto x = Builder()\n"
+           "    .Add() += other;",
+           "auto x = !Builder()\n"
+           "    .Add();",
+           "auto x = Builder()\n"
+           "    .Add()++;",
+           "auto x = co_await Builder()\n"
+           "    .Add();",
+           "auto x = (Builder)source\n"
+           "    .Add();",
+           "auto x = Consume(Builder()\n"
+           "    .Add());",
+           "auto x = target = Builder()\n"
+           "    .Add();",
+           "auto x = target += Builder()\n"
+           "    .Add();",
+           "auto x = (target = Builder()\n"
+           "    .Add());",
+       }) {
+    EXPECT_EQ(format(Code, Baseline), format(Code, Style)) << Code;
+  }
+
+  FormatStyle LimitedStyle = Style;
+  LimitedStyle.ColumnLimit = 30;
+  verifyFormat("static const auto x =\n"
+               "    Builder()\n"
+               "        .Add(\"foo\")\n"
+               "        .Finalize();",
+               "static const auto x = Builder().Add(\"foo\").Finalize();",
+               LimitedStyle);
+}
+
 TEST_F(FormatTest, BreaksAccordingToOperatorPrecedence) {
   verifyFormat(
       "if (aaaaaaaaaaaaaaaaaaaaaaaaa ||\n"

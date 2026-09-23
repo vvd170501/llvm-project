@@ -4952,6 +4952,45 @@ the configuration (without a prefix: `Auto`).
 
 
 
+(indentmemberaccessinsimpleassignments)=
+
+**IndentMemberAccessInSimpleAssignments** (`Boolean`) {versionbadge}`clang-format 24` {ref}`¶ <IndentMemberAccessInSimpleAssignments>`
+
+: Indent member access from the start of the previous line when it
+  refers to the value of a simple assignment (`=`). Other chains,
+  including those within compound assignments and unary expressions, keep
+  their usual indentation. An assignment chained with another assignment or
+  used in a `return` or `co_return` statement is not considered simple.
+
+  ```c++
+  false:
+  static const auto config = ConfigBuilder()
+                                 .Add("foo")
+                                 .Finalize();
+
+  true:
+  static const auto config = ConfigBuilder()
+      .Add("foo")
+      .Finalize();
+
+  // The expression starts on a new line, so indent from that line.
+  static const auto config =
+      ConfigBuilder()
+          .Add("foo")
+          .Finalize();
+
+  // Compound assignments keep their expression-relative indentation.
+  config += ConfigBuilder()
+                .Add("foo")
+                .Finalize();
+
+  // The builder is part of a binary expression, so its chain remains
+  // aligned relative to the builder expression.
+  auto config = BaseBuilder | ConfigBuilder()
+                                  .Add("foo")
+                                  .Finalize();
+  ```
+
 (indentppdirectives)=
 
 **IndentPPDirectives** (`PPDirectiveIndentStyle`) {versionbadge}`clang-format 6` {ref}`¶ <IndentPPDirectives>`

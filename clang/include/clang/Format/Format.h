@@ -3361,6 +3361,42 @@ struct FormatStyle {
   /// \version 10
   IndentGotoLabelStyle IndentGotoLabels;
 
+  /// Indent member access from the start of the previous line when it
+  /// refers to the value of a simple assignment (`=`). Other chains,
+  /// including those within compound assignments and unary expressions, keep
+  /// their usual indentation. An assignment chained with another assignment
+  /// or used in a `return` or `co_return` statement is not considered simple.
+  /// \code
+  ///    false:
+  ///    static const auto config = ConfigBuilder()
+  ///                                   .Add("foo")
+  ///                                   .Finalize();
+  ///
+  ///    true:
+  ///    static const auto config = ConfigBuilder()
+  ///        .Add("foo")
+  ///        .Finalize();
+  ///
+  ///    // The expression starts on a new line, so indent from that line.
+  ///    static const auto config =
+  ///        ConfigBuilder()
+  ///            .Add("foo")
+  ///            .Finalize();
+  ///
+  ///    // Compound assignments keep their expression-relative indentation.
+  ///    config += ConfigBuilder()
+  ///                  .Add("foo")
+  ///                  .Finalize();
+  ///
+  ///    // The builder is part of a binary expression, so its chain remains
+  ///    // aligned relative to the builder expression.
+  ///    auto config = BaseBuilder | ConfigBuilder()
+  ///                                    .Add("foo")
+  ///                                    .Finalize();
+  /// \endcode
+  /// \version 24
+  bool IndentMemberAccessInSimpleAssignments;
+
   /// Options for indenting preprocessor directives.
   enum PPDirectiveIndentStyle : int8_t {
     /// Does not indent any directives.
@@ -6247,6 +6283,8 @@ struct FormatStyle {
            IndentExportBlock == R.IndentExportBlock &&
            IndentExternBlock == R.IndentExternBlock &&
            IndentGotoLabels == R.IndentGotoLabels &&
+           IndentMemberAccessInSimpleAssignments ==
+               R.IndentMemberAccessInSimpleAssignments &&
            IndentPPDirectives == R.IndentPPDirectives &&
            IndentRequiresClause == R.IndentRequiresClause &&
            IndentWidth == R.IndentWidth &&
